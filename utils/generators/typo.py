@@ -1,5 +1,5 @@
 import random
-from utils.hangul.utils import decompose_hangul, compose_hangul
+from utils.hangul import decompose_hangul, compose_hangul, choseong_adjacent, jungseong_adjacent
 
 
 def generate_typo(char):
@@ -46,3 +46,35 @@ def generate_word_typo(word, typo_count=1):
         result[pos] = generate_typo(word[pos])
 
     return ''.join(result)
+
+
+def substitute(char):
+    """키보드에서 인접한 키를 눌러 발생하는 오타 생성"""
+    if not (0xAC00 <= ord(char) <= 0xD7A3):  # 한글인지 확인
+        return char
+
+    # 한글 분리
+    cho, jung, jong = decompose_hangul(char)
+
+    # 초성, 중성, 종성 중 무작위로 하나 선택
+    part_to_change = random.choice(['cho', 'jung', 'jong'])
+
+    if part_to_change == 'cho' and cho in choseong_adjacent and choseong_adjacent[cho]:
+        # 초성을 인접한 키로 변경
+        new_cho = random.choice(choseong_adjacent[cho])
+        return compose_hangul(new_cho, jung, jong)
+
+    elif part_to_change == 'jung' and jung in jungseong_adjacent and jungseong_adjacent[jung]:
+        # 중성을 인접한 키로 변경
+        new_jung = random.choice(jungseong_adjacent[jung])
+        return compose_hangul(cho, new_jung, jong)
+
+    elif part_to_change == 'jong':
+        # 종성 추가/제거/변경
+        if jong == 0:  # 종성이 없는 경우, 1-27 중에서 랜덤 추가
+            new_jong = random.randint(1, 27)
+        else:  # 종성이 있는 경우, 0(제거) 또는 다른 종성으로 변경
+            new_jong = random.choice([0] + [j for j in range(1, 28) if j != jong])
+        return compose_hangul(cho, jung, new_jong)
+
+    return char  # 변경 불가능한 경우
