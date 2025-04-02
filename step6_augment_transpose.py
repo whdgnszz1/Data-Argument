@@ -25,22 +25,6 @@ def decompose_sentence(sentence):
     return jamos
 
 
-def delete_jamo(jamos):
-    """
-    자모 리스트에서 랜덤하게 하나의 자모를 삭제
-
-    Args:
-        jamos (list): (자모 타입, 자모 문자) 튜플 리스트
-
-    Returns:
-        list: 삭제 후 남은 자모 리스트
-    """
-    if len(jamos) <= 1:
-        return []  # 자모가 하나 이하면 삭제 후 빈 리스트 반환
-    delete_position = random.randint(0, len(jamos) - 1)
-    return [j for i, j in enumerate(jamos) if i != delete_position]
-
-
 def recompose_jamos(jamos):
     """
     자모 리스트를 다시 한글 문자로 조합
@@ -109,27 +93,51 @@ def recompose_jamos(jamos):
     return ''.join(result)
 
 
-def generate_word_delete_typo(word):
+def transpose_jamo(word):
     """
-    단어에서 랜덤하게 하나의 자모를 삭제하여 오타 생성
+    단어의 자모를 분해하고, 인접한 자모를 교환한 뒤 다시 합치는 함수
 
     Args:
         word (str): 원본 단어
 
     Returns:
+        str: 자모 교환 후 재구성된 단어
+    """
+    jamo_sequence = decompose_sentence(word)
+    if len(jamo_sequence) < 2:
+        return word
+
+    # 자모 교환
+    i = random.randint(0, len(jamo_sequence) - 2)
+    jamo_sequence[i], jamo_sequence[i + 1] = jamo_sequence[i + 1], jamo_sequence[i]
+
+    # 자모 재구성
+    return recompose_jamos(jamo_sequence)
+
+
+def generate_word_transpose_typo(word, typo_count=1):
+    """
+    단어에서 최대 typo_count번의 자모 위치 교환
+
+    Args:
+        word (str): 원본 단어
+        typo_count (int): 교환 횟수
+
+    Returns:
         str: 오타가 포함된 단어
     """
-    jamos = decompose_sentence(word)
-    if len(jamos) <= 1:
-        return ''  # 자모가 하나 이하면 삭제 후 빈 문자열 반환
-    jamos_deleted = delete_jamo(jamos)
-    return recompose_jamos(jamos_deleted)
+    result = word
+    for _ in range(typo_count):
+        result = transpose_jamo(result)
+    return result
 
 
-# 테스트
+# 테스트 코드
 if __name__ == "__main__":
-    sentence = "안녕하세요"
-    print("\n단어 단위 자모 삭제 테스트")
-    for _ in range(3):
-        typo_result = generate_word_delete_typo(sentence)
-        print(f"오타 예시: {typo_result}")
+    test_words = ["안녕하세요", "만남을", "학교에", "반갑습니다"]
+
+    print("자모 위치 교환 테스트:")
+    for word in test_words:
+        for i in range(3):
+            typo_result = generate_word_transpose_typo(word, typo_count=1)
+            print(f"{word} -> {typo_result}")
