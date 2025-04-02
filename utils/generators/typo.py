@@ -251,3 +251,54 @@ def recompose_jamos(jamos):
             i += 1
 
     return ''.join(result)
+
+
+def augment_sentence(sentence, prob=0.1):
+    """
+    다양한 오타 생성 방법을 무작위로 선택하여 문장을 증강하는 함수
+
+    Args:
+        sentence (str): 원본 문장
+        prob (float): 증강 확률
+
+    Returns:
+        str: 증강된 문장
+    """
+    # 문장을 단어 단위로 분리
+    words = sentence.split()
+    # 사용 가능한 증강 방법들
+    methods = ['substitute', 'insert_jamo', 'delete_jamo', 'transpose_jamo']
+    augmented_words = []
+
+    for word in words:
+        # 랜덤으로 증강 방법 하나 선택
+        method = random.choice(methods)
+
+        if method == 'substitute':
+            # 각 문자에 대해 prob 확률로 substitute 적용
+            augmented_word = ''.join(
+                substitute(char) if random.random() < prob else char
+                for char in word
+            )
+        elif method == 'insert_jamo':
+            # 각 문자 뒤에 prob 확률로 자음/모음 추가
+            augmented_word = ''
+            for char in word:
+                augmented_word += char
+                if random.random() < prob:
+                    augmented_word += insert_jamo(char)[-1]  # 마지막 문자(추가된 자모)만 사용
+            augmented_word = augmented_word.rstrip()
+        elif method == 'delete_jamo':
+            # 단어를 자모 단위로 분해 후 삭제
+            jamos = decompose_sentence(word)
+            if random.random() < prob and jamos:
+                jamos = delete_jamo(jamos)
+            augmented_word = recompose_jamos(jamos)
+        elif method == 'transpose_jamo':
+            # prob 확률로 자모 교환
+            augmented_word = transpose_jamo(word) if random.random() < prob else word
+
+        augmented_words.append(augmented_word)
+
+    # 증강된 단어들을 다시 문장으로 조합
+    return ' '.join(augmented_words)
