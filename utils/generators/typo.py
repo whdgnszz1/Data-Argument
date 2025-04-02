@@ -103,3 +103,22 @@ def substitute(char):
         return hgtk.letter.compose(new_cho, new_jung, new_jong)
     except hgtk.exception.CompositionError:
         return char  # 조합 불가능한 경우 원래 문자 반환
+
+
+def insert_jamo(char):
+    """문자 뒤에 자음 또는 모음만 추가하는 함수"""
+    # 자음(초성)과 모음(중성) 중 하나 선택
+    jamo_type = random.choice(['cho', 'jung'])
+
+    if jamo_type == 'cho':
+        # 자음 중 하나 선택
+        cho_idx = random.choice(list(choseong_adjacent.keys()))
+        if cho_idx < len(CHO):
+            return char + CHO[cho_idx]
+    else:
+        # 모음 중 하나 선택
+        jung_idx = random.choice(list(jungseong_adjacent.keys()))
+        if jung_idx < len(JOONG):
+            return char + JOONG[jung_idx]
+
+    return char  # 변경 불가능한 경우
