@@ -1,6 +1,5 @@
 import random
 from utils.hangul import decompose_hangul, compose_hangul
-from utils.generators import generate_word_typo
 
 # 두벌식 표준 키보드 기준 초성(자음) 인접키 매핑
 # 키보드 배열: ㅂㅈㄷㄱㅅㅛㅕㅑㅐㅔ / ㅁㄴㅇㄹㅎㅗㅓㅏㅣ / ㅋㅌㅊㅍㅠㅜㅡ
@@ -81,7 +80,7 @@ jungseong_adjacent = {
 }
 
 
-def generate_adjacent_key_typo(char):
+def substitute(char):
     """키보드에서 인접한 키를 눌러 발생하는 오타 생성"""
     if not (0xAC00 <= ord(char) <= 0xD7A3):  # 한글인지 확인
         return char
@@ -111,6 +110,33 @@ def generate_adjacent_key_typo(char):
         return compose_hangul(cho, jung, new_jong)
 
     return char  # 변경 불가능한 경우
+
+
+def generate_word_typo(word, typo_count=1):
+    """단어에서 최대 typo_count개의 문자만 인접 키보드 위치 기반 오타로 변경"""
+    if not word:
+        return word
+
+    # 한글 문자의 위치 찾기
+    hangul_indices = []
+    for i, char in enumerate(word):
+        if 0xAC00 <= ord(char) <= 0xD7A3:
+            hangul_indices.append(i)
+
+    # 한글이 없으면 원본 반환
+    if not hangul_indices:
+        return word
+
+    # 오타로 변경할 위치 선택 (최대 typo_count개)
+    typo_positions = random.sample(hangul_indices, min(typo_count, len(hangul_indices)))
+
+    # 결과 문자열 생성
+    result = list(word)
+    for pos in typo_positions:
+        # substitute 함수를 사용하여 인접 키 기반 오타 생성
+        result[pos] = substitute(word[pos])
+
+    return ''.join(result)
 
 
 # 테스트
